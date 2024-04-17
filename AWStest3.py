@@ -47,18 +47,24 @@ def test_url(url, index):
     try:
         # Extract hostname from URL
         hostname = url.split("//")[-1].split("/")[0]
+        # Record the start time
+        start_time = time.time()
+        # Send a GET request
+        response = requests.get(url, stream=True, timeout=5)
+        # Calculate the latency in milliseconds
+        latency = (time.time() - start_time) * 1000
         # Test TCP ports
         tcp80 = check_port(hostname, 80)
         tcp443 = check_port(hostname, 443)
         # Record the test time
         test_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # Record the test result
-        result = [index, test_time, url, tcp80, tcp443]
+        # Compile the result
+        result = [index, test_time, url, tcp80, tcp443, f"{latency:.2f} ms"]
         if args.geo:
             location = get_location()
             result.append(location)
     except Exception as e:
-        result = [index, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), url, "Error", "Error"]
+        result = [index, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), url, "Error", "Error", "Error"]
         if args.geo:
             result.append("City error")
     return result
@@ -67,7 +73,7 @@ def test_url(url, index):
 with open("test_results.csv", "w", newline='') as file:
     writer = csv.writer(file)
     # Write the header
-    header = ["Number", "Test Time", "URL Address", "TCP 80", "TCP 443"]
+    header = ["Number", "Test Time", "URL Address", "TCP 80", "TCP 443", "Latency"]
     if args.geo:
         header.append("City")
     writer.writerow(header)
